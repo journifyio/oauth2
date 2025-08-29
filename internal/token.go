@@ -278,6 +278,9 @@ func doTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
 	content, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	switch content {
 	case "application/x-www-form-urlencoded", "text/plain":
+		if strings.Contains(req.URL.Host, "tiktok") {
+			log.Printf("tiktok form token response: %s", string(body))
+		}
 		// some endpoints return a query string
 		vals, err := url.ParseQuery(string(body))
 		if err != nil {
@@ -301,10 +304,10 @@ func doTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
 			token.Expiry = time.Now().Add(time.Duration(expires) * time.Second)
 		}
 	default:
-		var tj tokenJSON
 		if strings.Contains(req.URL.Host, "tiktok") {
-			log.Printf("tiktok token response: %s", string(body))
+			log.Printf("tiktok json token response: %s", string(body))
 		}
+		var tj tokenJSON
 		if err = json.Unmarshal(body, &tj); err != nil {
 			if failureStatus {
 				return nil, retrieveError
