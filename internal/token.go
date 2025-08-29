@@ -19,7 +19,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"log"
+	"log/slog"
 )
 
 // Token represents the credentials used to authorize
@@ -279,7 +279,7 @@ func doTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
 	switch content {
 	case "application/x-www-form-urlencoded", "text/plain":
 		if strings.Contains(req.URL.Host, "tiktok") {
-			log.Printf("tiktok form token response: %s", string(body))
+			slog.Info("tiktok form token response", "body", string(body))
 		}
 		// some endpoints return a query string
 		vals, err := url.ParseQuery(string(body))
@@ -305,7 +305,7 @@ func doTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
 		}
 	default:
 		if strings.Contains(req.URL.Host, "tiktok") {
-			log.Printf("tiktok json token response: %s", string(body))
+			slog.Info("tiktok json token response", "body", string(body))
 		}
 		var tj tokenJSON
 		if err = json.Unmarshal(body, &tj); err != nil {
@@ -334,6 +334,7 @@ func doTokenRoundTrip(ctx context.Context, req *http.Request) (*Token, error) {
 		return nil, retrieveError
 	}
 	if token.AccessToken == "" {
+		slog.Info("missing access_token", "body", string(body))
 		return nil, errors.New("oauth2: server response missing access_token")
 	}
 	return token, nil
